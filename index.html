@@ -90,6 +90,19 @@
                 object-fit: cover;
                 object-position: 70% 30%;
             }
+
+            /* 説明文のサイズ調整 */
+            .responsive_text {
+                font-size: 18px; /* デフォルト */
+            }
+
+            @media (max-width: 576px) {
+            .responsive_text {
+                font-size: 15px; /* sm以下の場合 */
+            }
+        }
+
+
         </style>
     
         </head>
@@ -205,9 +218,9 @@
                             </div>
                             <div class="ms-5 ms-lg-0 mt-0 mt-lg-3">
                                 <!-- Memo: 小画面は中央揃え、lg以上も中央揃え -->
-                                <h3 class="fw-bold text-center text-lg-center ms-2 me-2 ms-lg-5 me-lg-5 border-bottom pb-2" style="color: #3b3b3b;">Takahiro Manabe</h3>
+                                <h3 class="fw-bold text-center text-lg-center ms-0 me-0 ms-lg-5 me-lg-5 border-bottom pb-2" style="color: #3b3b3b;">Takahiro Manabe</h3>
                                 <!-- Biomedical ... は常に左揃え -->
-                                <p class="mb-0 text-center ms-4 me-4" style="font-size: 14px;">
+                                <p class="mb-0 text-center ms-0 me-0 ms-lg-4 me-lg-4" style="font-size: 14px;">
                                     Biomedical Engineering Master's Student at Northwestern
                                 </p>
                             </div>
@@ -218,7 +231,7 @@
                             <div class="text-start">
                                 <div class="fs-3 text-muted">About</div>
                                     <div class="p-1">
-                                        <p style="font-size: 18px;">I am currently a second-year Master's student in the 
+                                        <p class="responsive_text">I am currently a second-year Master's student in the 
                                             <a href="https://www.mccormick.northwestern.edu/biomedical/academics/graduate/" target="_blank" rel="nooper" style="color: rgb(20, 120, 110)">Biomedical Engineering</a>
                                             program at Northwestern University, supervised by 
                                             <a href="https://www.feinberg.northwestern.edu/faculty-profiles/az/profile.html?xid=16463" target="_blank" rel="nooper" style="color: rgb(20, 120, 110)">Dr. Marc Slutzky</a> 
