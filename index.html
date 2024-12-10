@@ -299,7 +299,7 @@
             <div class="container px-5">
                 <div class="row align-items-center justify-content-between flex-column flex-lg-row">
                     <div class="col-auto">
-                        <div class="small m-0">&copy; Takahiro Manabe.  All Rights Reserved.</div>
+                        <div class="small m-0">&copy; <span id="current-year"></span> Takahiro Manabe. All Rights Reserved.</div>
                     </div>
                     <!-- <div class="col-auto">
                         <a class="small" href="#!">Privacy</a>
@@ -318,7 +318,9 @@
         <!-- Core theme JS-->
         <script src="js/scripts.js"></script>
 
-        <script>
+        <script> /* Javascript */
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
             document.addEventListener("DOMContentLoaded", function() {
                 // ナビゲーションリンクを複製して挿入
                 var navLinksTemplate = document.getElementById('nav-links-template').innerHTML;
