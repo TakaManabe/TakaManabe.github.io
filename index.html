@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
 
-        <!-- xs	～576px未満	超小さいデバイス（既定値）
+        <!-- Bootstrap豆級(私)用サイズガイド
+        xs	～576px未満	超小さいデバイス（既定値）
         sm	576px以上 ～768px未満	小さいデバイス
         md	768px以上 ～992px未満	中くらいのデバイス
         lg	992px以上 ～1200px未満	大きいデバイス
@@ -48,23 +49,23 @@
 
             /* ナビゲーションバー分の余白(Boostrapデフォ＝56) */
             body {
-                padding-top: 100px; /* ナビゲーションバーの高さ分 */
+                padding-top: 100px; /* ナビゲーションバーの高さ分+α */
             }
 
-            /* フェードイン */
+            /* フェードイン開始 */
             .fade-in {
                 opacity: 0;
-                transition: opacity 1s ease-out; /* 1秒でフェードイン */
+                transition: opacity 1s ease-out; /* フェードイン1秒 */
             }
 
-            /* フェードイン後の状態 */
+            /* フェードイン終わり */
             .visible {
                 opacity: 1;
             }
                     
             /* ナビゲーションのボーダー */
             .navbar {
-                border-bottom: 2px double #a3a3a3; /* 好みの色や太さに変更可能 */
+                border-bottom: 2px double #a3a3a3; 
             }
 
             /* 楕円 */
