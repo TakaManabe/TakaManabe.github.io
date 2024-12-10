@@ -360,7 +360,7 @@
                 // ソーシャルアイコンを複製して挿入
                 var socialIconsTemplate = document.getElementById('social-icons-template').innerHTML;
                 document.getElementById('navbar-social-icons').innerHTML = socialIconsTemplate;
-                // オフキャンバスメニューのソーシャルアイコンは <div> 内に挿入するため、<ul> タグで囲みます
+                // オフキャンバスメニューのソーシャルアイコンは <div> 内に挿入するので<ul> タグで囲む！
                 document.getElementById('offcanvas-social-icons').innerHTML = '<ul class="navbar-nav flex-row">' + socialIconsTemplate + '</ul>';
             });
         </script>
