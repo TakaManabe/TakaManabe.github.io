@@ -45,7 +45,18 @@
     
         
         <style> /* (CSS) */
-            
+
+            /* フェードイン */
+            .fade-in {
+                opacity: 0;
+                transition: opacity 1s ease-out; /* 1秒でフェードイン */
+            }
+
+            /* フェードイン後の状態 */
+            .visible {
+                opacity: 1;
+            }
+                    
             /* ナビゲーションのボーダー */
             .navbar {
                 border-bottom: 2px double #a3a3a3; /* 好みの色や太さに変更可能 */
@@ -107,7 +118,7 @@
     
         </head>
 
-    <body class="d-flex flex-column h-100">
+    <body class="d-flex flex-column h-100 fade-in">
         <!-- Navigation Links -->
         <ul id="nav-links-template" style="display: none;">
             <li class="nav-item">
@@ -318,7 +329,13 @@
         <!-- Core theme JS-->
         <script src="js/scripts.js"></script>
 
-        <script> /* Javascript */
+        <script> // Javascript
+
+            // add visible class
+            window.addEventListener('load', () => {
+                document.body.classList.add('visible');
+            });
+
             document.getElementById('current-year').textContent = new Date().getFullYear();
 
             document.addEventListener("DOMContentLoaded", function() {
