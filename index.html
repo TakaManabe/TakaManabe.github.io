@@ -52,6 +52,13 @@
                 padding-top: 100px; /* ナビゲーションバーの高さ分+α */
             }
 
+            /* mediaサイズ */
+            @media (max-width: 576px) {
+                body {
+                padding-top: 56px; /* ナビゲーションバーの高さ分+α */
+                }
+            }
+
             /* フェードイン開始 */
             .fade-in {
                 opacity: 0;
@@ -82,7 +89,7 @@
                 flex-shrink: 0;
             }
             
-            /* スマホ用サイズ */
+            /* mediaサイズ */
             @media (max-width: 576px) {
                 .outer_ellipse {
                     width: 32vw;  /* スマホ時は50vwに拡大 */
