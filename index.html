@@ -46,7 +46,7 @@
             /* 楕円 */
             .outer_ellipse {
                 width: 200px;
-                height: 300px;
+                aspect-ratio: 2 / 3;
                 border: 5px double #d3d3d3;
                 border-radius: 50%;
                 overflow: hidden;
@@ -54,6 +54,7 @@
                 align-items: center;
                 justify-content: center;
                 max-width: 100%;
+                flex-shrink: 0;
             }
             
             /* スマホ用サイズ */
@@ -188,11 +189,19 @@
                     <div class="row gx-6 align-items-top">
                         
                         <!-- 左カラム：画像エリア -->
-                        <div class="col-lg-4 d-flex justify-content-center mb-5 mb-lg-0">
+                        <div class="col-lg-4 d-flex flex-row flex-lg-column align-items-center justify-content-top mb-5 mb-lg-0 mt-5">
                             <div class="outer_ellipse">
                                 <div class="inner_ellipse">
                                   <img class="ellipse_image" src="assets/profile.jpeg" alt="Profile image" />
                                 </div>
+                            </div>
+                            <div class="ms-5 ms-lg-0 mt-0 mt-lg-3">
+                                <!-- Memo: 小画面は中央揃え、lg以上も中央揃え -->
+                                <h3 class="fw-bold text-center text-lg-center border-bottom pb-2">Takahiro Manabe</h3>
+                                <!-- Biomedical ... は常に左揃え -->
+                                <p class="mb-0 text-center ms-4 me-4" style="font-size: 14px;">
+                                    Biomedical Engineering Master's Student at Northwestern
+                                </p>
                             </div>
                         </div>
 
