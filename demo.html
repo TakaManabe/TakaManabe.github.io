@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Block Breaker</title>
+  <style>
+    /* 基本リセット＆背景 */
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+    }
+    /* Three.js レンダラーが使うキャンバス */
+    #gameCanvas { display: block; }
+
+    /* オーバーレイ：スタート、ゲームオーバー、クリア時に表示 */
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      z-index: 10;
+      transition: opacity 0.8s ease;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    #overlayContent {
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+    #overlayContent h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    }
+    #overlayContent button {
+      font-size: 1.5em;
+      padding: 10px 20px;
+      border: none;
+      background: #ff9800;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    #overlayContent button:hover { transform: scale(1.1); }
+
+    /* スコアボード */
+    #scoreBoard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 5;
+      color: #fff;
+      font-size: 1.2em;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    }
+    #scoreBoard span { margin-right: 20px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- オーバーレイ：初回はタイトルとスタートボタン -->
+  <div id="overlay">
+    <div id="overlayContent">
+      <h1>3D Block Breaker</h1>
+      <button id="startBtn">Start Game</button>
+    </div>
+  </div>
+  <!-- スコア・残機表示 -->
+  <div id="scoreBoard">
+    <span id="score">Score: 0</span>
+    <span id="lives">Lives: 3</span>
+  </div>
+  <!-- Three.js 用キャンバス -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Three.js の読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    /* ===== グローバル変数 ===== */
+    let scene, camera, renderer;
+    let paddle, ball;
+    let bricks = [];
+    const paddleWidth = 10, paddleHeight = 1, paddleDepth = 2;
+    const ballRadius = 1;
+    let ballSpeed = new THREE.Vector3(0.3, 0.3, 0);
+    let score = 0, lives = 3;
+    let gameStarted = false;
+    const fieldWidth = 60, fieldHeight = 40; // ゲームエリア（ワールド座標）の幅・高さ
+
+    const canvas = document.getElementById('gameCanvas');
+
+    /* ===== 初期化 ===== */
+    function init() {
+      // シーン・カメラ・レンダラーの作成
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1e1e1e);
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+      // 3D感を出すため、少し斜め上から見る
+      camera.position.set(0, 20, 50);
+      camera.lookAt(0, 0, 0);
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      // 照明
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(0, 50, 50);
+      scene.add(directionalLight);
+
+      // パドルの作成
+      const paddleGeometry = new THREE.BoxGeometry(paddleWidth, paddleHeight, paddleDepth);
+      const paddleMaterial = new THREE.MeshPhongMaterial({ color: 0xff9800 });
+      paddle = new THREE.Mesh(paddleGeometry, paddleMaterial);
+      paddle.position.set(0, -fieldHeight/2 + 5, 0);
+      scene.add(paddle);
+
+      // ボールの作成
+      const ballGeometry = new THREE.SphereGeometry(ballRadius, 32, 32);
+      const ballMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+      ball = new THREE.Mesh(ballGeometry, ballMaterial);
+      resetBall();
+      scene.add(ball);
+
+      // レンガ（ブロック）の生成
+      createBricks();
+
+      // マウス操作でパドル移動
+      document.addEventListener('mousemove', onMouseMove, false);
+      window.addEventListener('resize', onWindowResize, false);
+    }
+
+    /* ===== ゲーム開始・再スタート ===== */
+    function startGame() {
+      score = 0;
+      lives = 3;
+      updateScoreBoard();
+      resetBall();
+      createBricks();
+      gameStarted = true;
+      hideOverlay();
+    }
+
+    /* ===== オーバーレイ操作 ===== */
+    function showOverlay(title, buttonText) {
+      const overlay = document.getElementById('overlay');
+      const overlayContent = document.getElementById('overlayContent');
+      overlayContent.innerHTML = '<h1>' + title + '</h1><button id="restartBtn">' + buttonText + '</button>';
+      overlay.classList.remove('hidden');
+      document.getElementById('restartBtn').addEventListener('click', startGame);
+    }
+    function hideOverlay() {
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
+    /* ===== ボール・ブロックリセット ===== */
+    function resetBall() {
+      ball.position.set(0, paddle.position.y + paddleHeight/2 + ballRadius + 0.1, 0);
+      // ボールの初期進行方向：45～135度（上向き）のランダムな角度
+      const angle = (Math.random() * Math.PI/2) + Math.PI/4;
+      const speed = 0.3;
+      ballSpeed.x = speed * Math.cos(angle);
+      ballSpeed.y = speed * Math.sin(angle);
+    }
+    function createBricks() {
+      // 既存のブロックを削除
+      bricks.forEach(b => scene.remove(b));
+      bricks = [];
+      const brickRows = 5;
+      const brickCols = 10;
+      const brickWidth = 5;
+      const brickHeight = 2;
+      const brickDepth = 2;
+      const offsetX = - (brickCols * brickWidth) / 2 + brickWidth/2;
+      const offsetY = fieldHeight/2 - 10;
+      for (let row = 0; row < brickRows; row++) {
+        for (let col = 0; col < brickCols; col++) {
+          const brickGeo = new THREE.BoxGeometry(brickWidth - 0.5, brickHeight - 0.5, brickDepth);
+          // カラフルにするため、列によって色相を変化
+          const brickMat = new THREE.MeshPhongMaterial({ color: new THREE.Color("hsl(" + Math.floor((col/brickCols)*360) + ", 70%, 50%)") });
+          const brick = new THREE.Mesh(brickGeo, brickMat);
+          brick.position.x = offsetX + col * brickWidth;
+          brick.position.y = offsetY - row * brickHeight;
+          brick.position.z = 0;
+          scene.add(brick);
+          bricks.push(brick);
+        }
+      }
+    }
+
+    /* ===== イベントリスナー ===== */
+    function onMouseMove(event) {
+      // マウス X 座標 → ゲーム内 x 座標へ変換（画面横幅に合わせる）
+      const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      paddle.position.x = mouseX * (fieldWidth/2 - paddleWidth/2);
+    }
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    /* ===== ゲームループ ===== */
+    function update() {
+      if (!gameStarted) return;
+      // ボール移動
+      ball.position.add(ballSpeed);
+
+      // 壁との衝突判定
+      if (ball.position.x - ballRadius < -fieldWidth/2) {
+        ball.position.x = -fieldWidth/2 + ballRadius;
+        ballSpeed.x = -ballSpeed.x;
+      }
+      if (ball.position.x + ballRadius > fieldWidth/2) {
+        ball.position.x = fieldWidth/2 - ballRadius;
+        ballSpeed.x = -ballSpeed.x;
+      }
+      if (ball.position.y + ballRadius > fieldHeight/2) {
+        ball.position.y = fieldHeight/2 - ballRadius;
+        ballSpeed.y = -ballSpeed.y;
+      }
+      // ボールが下（落下）した場合
+      if (ball.position.y - ballRadius < -fieldHeight/2) {
+        lives--;
+        updateScoreBoard();
+        if (lives <= 0) {
+          gameStarted = false;
+          // 少し待ってからオーバーレイ表示
+          setTimeout(() => { showOverlay("Game Over<br>Score: " + score, "Restart Game"); }, 300);
+          return;
+        }
+        resetBall();
+      }
+
+      // パドルとの衝突判定
+      if ( ball.position.y - ballRadius <= paddle.position.y + paddleHeight/2 &&
+           ball.position.y - ballRadius >= paddle.position.y - paddleHeight/2 &&
+           ball.position.x >= paddle.position.x - paddleWidth/2 &&
+           ball.position.x <= paddle.position.x + paddleWidth/2 ) {
+        ball.position.y = paddle.position.y + paddleHeight/2 + ballRadius;
+        ballSpeed.y = Math.abs(ballSpeed.y);
+        // パドル上の当たり位置に応じて x 方向の速度を調整
+        const hitPos = (ball.position.x - paddle.position.x) / (paddleWidth/2);
+        ballSpeed.x = hitPos * 0.5;
+      }
+
+      // ブロックとの衝突判定（シンプルな AABB 判定）
+      for (let i = bricks.length - 1; i >= 0; i--) {
+        const brick = bricks[i];
+        // ブロックサイズは brickWidth ≒ 5, brickHeight ≒ 2
+        if ( ball.position.x + ballRadius > brick.position.x - 2.5 &&
+             ball.position.x - ballRadius < brick.position.x + 2.5 &&
+             ball.position.y + ballRadius > brick.position.y - 1 &&
+             ball.position.y - ballRadius < brick.position.y + 1 ) {
+          // 衝突時はブロックを削除、スコア加算
+          scene.remove(brick);
+          bricks.splice(i, 1);
+          score += 10;
+          updateScoreBoard();
+          ballSpeed.y = -ballSpeed.y;
+          break;
+        }
+      }
+
+      // すべてのブロックを破壊したら勝利
+      if (bricks.length === 0) {
+        gameStarted = false;
+        setTimeout(() => { showOverlay("You Win!<br>Score: " + score, "Restart Game"); }, 300);
+        return;
+      }
+    }
+    function animate() {
+      requestAnimationFrame(animate);
+      update();
+      renderer.render(scene, camera);
+    }
+    function updateScoreBoard() {
+      document.getElementById('score').innerText = "Score: " + score;
+      document.getElementById('lives').innerText = "Lives: " + lives;
+    }
+
+    /* ===== 初期処理 ===== */
+    init();
+    animate();
+
+    /* ===== スタートボタンのイベント ===== */
+    document.getElementById('startBtn').addEventListener('click', startGame);
+  </script>
+</body>
+</html>
